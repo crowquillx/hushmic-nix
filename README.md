@@ -4,7 +4,7 @@ A Nix flake for [HushMic](https://github.com/Fovty/hushmic), a real-time
 microphone noise suppressor for PipeWire.
 
 ```console
-nix run github:YOUR-USER/hushmic-nix
+nix run github:crowquillx/hushmic-nix
 ```
 
 Or add the flake as an input and use `inputs.hushmic-nix.packages.${system}.default`.
