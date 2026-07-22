@@ -15,6 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: DeterminateSystems/nix-installer-action@v22
+      - uses: cachix/cachix-action@v17
+        with:
+          name: hushmic-nix
+          authToken: ${{ secrets.CACHIX_AUTH }}
       - uses: DeterminateSystems/magic-nix-cache-action@v14
         with:
           use-flakehub: false
