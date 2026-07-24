@@ -11,7 +11,11 @@
   libGL,
   libxkbcommon,
   wayland,
-  xorg,
+  libX11,
+  libXcursor,
+  libXi,
+  libXrandr,
+  libxcb,
 }:
 
 let
@@ -27,11 +31,11 @@ let
     libGL
     libxkbcommon
     wayland
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXi
-    xorg.libXrandr
-    xorg.libxcb
+    libX11
+    libXcursor
+    libXi
+    libXrandr
+    libxcb
   ];
 in
 rustPlatform.buildRustPackage rec {
@@ -47,7 +51,11 @@ rustPlatform.buildRustPackage rec {
 
   cargoHash = "sha256-vAbEn49pM4gagqBtUz+/XqXyuAGV9frtKjISLON7Oa4=";
 
-  nativeBuildInputs = [ makeWrapper patchelf pkg-config ];
+  nativeBuildInputs = [
+    makeWrapper
+    patchelf
+    pkg-config
+  ];
   buildInputs = [ onnxruntime ] ++ guiLibs;
 
   HUSHMIC_BUILD_MODEL = "${placeholder "out"}/share/hushmic/models/dpdfnet8_48khz_hr.onnx";
@@ -101,7 +109,10 @@ rustPlatform.buildRustPackage rec {
   meta = {
     description = "Real-time microphone noise suppression as a virtual mic";
     homepage = "https://github.com/Fovty/hushmic";
-    license = with lib.licenses; [ mit asl20 ];
+    license = with lib.licenses; [
+      mit
+      asl20
+    ];
     mainProgram = "hushmic";
     platforms = [ "x86_64-linux" ];
   };
