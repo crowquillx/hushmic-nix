@@ -21,6 +21,6 @@ jobs:
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH }}
         run: |
-          store_path="$(nix path-info .#hushmic)"
+          store_path="$(nix build .#hushmic --no-link --print-out-paths)"
           cachix push hushmic-nix "$store_path"
           cachix pin hushmic-nix latest "$store_path" --keep-revisions 1
