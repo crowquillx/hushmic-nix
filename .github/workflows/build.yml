@@ -16,3 +16,11 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH }}
       - uses: DeterminateSystems/magic-nix-cache-action@v13
       - run: nix flake check
+      - name: Pin current master build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH }}
+        run: |
+          store_path="$(nix path-info .#hushmic)"
+          cachix push hushmic-nix "$store_path"
+          cachix pin hushmic-nix latest "$store_path" --keep-revisions 1
