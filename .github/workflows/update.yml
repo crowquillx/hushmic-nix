@@ -5,15 +5,23 @@ on:
   schedule:
     - cron: "17 6 * * *"
 
+concurrency:
+  group: hushmic-updater
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   update:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: master
+          fetch-depth: 0
       - uses: DeterminateSystems/nix-installer-action@v22
       - uses: cachix/cachix-action@v17
         with:
@@ -30,10 +38,45 @@ jobs:
       - name: Verify package
         run: nix build .#hushmic
       - uses: peter-evans/create-pull-request@v8
+        id: create-pr
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           branch: automation/update-hushmic
+          base: master
           delete-branch: true
           commit-message: "chore: update HushMic"
           title: "chore: update HushMic"
           body: "Automated update of HushMic and the pinned flake inputs."
+      - name: Verify pull request commit
+        if: steps.create-pr.outputs.pull-request-number != ''
+        env:
+          PR_HEAD_SHA: ${{ steps.create-pr.outputs.pull-request-head-sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin "$PR_HEAD_SHA"
+          git checkout --detach "$PR_HEAD_SHA"
+          test "$(git rev-parse HEAD)" = "$PR_HEAD_SHA"
+          nix flake check
+      - name: Merge verified pull request
+        if: steps.create-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          PR_HEAD_SHA: ${{ steps.create-pr.outputs.pull-request-head-sha }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --squash \
+            --match-head-commit "$PR_HEAD_SHA"
+      - name: Pin merged master build
+        if: steps.create-pr.outputs.pull-request-number != ''
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin master
+          git checkout --detach FETCH_HEAD
+          store_path="$(nix build .#hushmic --no-link --print-out-paths)"
+          cachix push hushmic-nix "$store_path"
+          cachix pin hushmic-nix latest "$store_path" --keep-revisions 1

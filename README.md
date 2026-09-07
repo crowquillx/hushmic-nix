@@ -23,7 +23,9 @@ Or add the flake as an input and use `inputs.hushmic-nix.packages.${system}.defa
 HushMic requires a running PipeWire/WirePlumber session and currently supports
 only x86_64 Linux, matching upstream.
 
-The scheduled GitHub Actions updater checks daily for a new upstream release,
-refreshes the source and Cargo hashes with `nix-update`, verifies the build, and
-opens (or refreshes) an update pull request. It can also be started manually
-from the Actions tab.
+The GitHub Actions updater runs daily on `master` (or can be started manually
+from the Actions tab), checks for a new upstream release, refreshes the source
+and Cargo hashes with `nix-update`, and verifies the build. When an update is
+found, it opens or refreshes an update pull request, checks the exact pull
+request commit with `nix flake check`, and squash-merges it automatically when
+that check passes. Runs with no update leave `master` unchanged.
