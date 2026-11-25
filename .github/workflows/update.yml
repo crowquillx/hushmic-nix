@@ -34,7 +34,10 @@ jobs:
       - name: Update package and flake inputs
         run: |
           nix flake update
-          nix run nixpkgs#nix-update -- hushmic --flake
+          # nix-update < 1.17.0 breaks with Nix 2.35, whose `nix flake metadata`
+          # no longer copies the flake into the store (Mic92/nix-update#693).
+          # Switch back to nixpkgs#nix-update once nixpkgs ships >= 1.17.0.
+          nix run github:Mic92/nix-update/v1.17.0 -- hushmic --flake
       - name: Verify package
         run: nix build .#hushmic
       - uses: peter-evans/create-pull-request@v8
